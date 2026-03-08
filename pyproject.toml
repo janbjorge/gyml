@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gyaml"
+version = "0.1.0"
+description = "JSON semantics, YAML block syntax — a strict, unambiguous YAML subset"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["yaml", "json", "config", "parser"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Text Processing :: Markup",
+  "Typing :: Typed",
+]
+# Zero runtime dependencies — the whole point of GYAML.
+dependencies = []
+
+[project.scripts]
+gyaml = "gyaml:_cli"
+
+[project.urls]
+Repository = "https://github.com/janbjorge/gyaml"
+
+# ---------------------------------------------------------------------------
+# uv
+# ---------------------------------------------------------------------------
+
+[tool.uv]
+dev-dependencies = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+  "ty>=0.0.1",
+]
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "strict"
+
+# ---------------------------------------------------------------------------
+# ruff
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "TCH", # flake8-type-checking
+  "ANN", # flake8-annotations (enforce typed signatures)
+  "RUF", # Ruff-native rules
+]
+ignore = [
+  "ANN101", # missing type for `self`
+  "ANN102", # missing type for `cls`
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["gyaml"]
+
+# ---------------------------------------------------------------------------
+# ty
+# ---------------------------------------------------------------------------
+
+[tool.ty.environment]
+python-version = "3.11"
