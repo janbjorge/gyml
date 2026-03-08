@@ -6,30 +6,16 @@
 
 ## The problem
 
-Picture this. You are three coffees deep, 11pm, production is on fire. You trace
-the bug to a config file. The value is `NO`. Just a string, right? Except PyYAML
-read it as `False`. Because `NO` is the ISO country code for Norway and some YAML
-1.1 designer decided it should coerce to a boolean. Your country abbreviation just
-took down prod.
+YAML's spec contains 211 grammar productions across ten chapters. It has five
+scalar styles, five ways to write null, anchors, aliases, tags, and implicit type
+coercion rules that vary by implementation. The Norway Problem is a well-known
+example: `NO` is a valid YAML 1.1 boolean (`False`), which surprises anyone using
+it as a country code or similar string value.
 
-This is not a contrived edge case. It has happened to real engineers at real
-companies with real on-call rotations.
-
-The YAML spec contains 211 grammar productions spread across ten chapters. It has
-five scalar styles. It has five ways to write null (`null`, `Null`, `NULL`, `~`,
-and the empty node). It has anchors that let you embed logic inside a data file.
-It has tags that let you instantiate arbitrary Python objects from a config:
-`!!python/object/apply:os.system` is valid PyYAML.
-
-The format was designed to be human-friendly. Instead it became a footgun with a
-hair trigger, a thick manual, and a community of people who have all been burned
-by it at least once and now paste `yaml: risky business` into every `package.json`
-they touch.
-
-GYML is the fix. It takes YAML's clean block syntax, the indented key-value style
-that actually is nice to write, and pairs it with JSON's strict, unambiguous
-semantics. No surprises. No Norway. No 11pm incidents from a boolean that used to
-be a country.
+GYML is a strict subset of YAML that trades that flexibility for predictability.
+It keeps YAML's block indentation syntax and applies JSON's type semantics: one
+spelling per type, no implicit coercion surprises, no anchors or tags. What you
+write is what you get.
 
 ---
 
@@ -212,19 +198,6 @@ someone's production system.
 
 ---
 
-## Compared to alternatives
-
-| | GYML | PyYAML | StrictYAML |
-|---|---|---|---|
-| Auto-typed scalars | yes | yes (dangerously) | no (strings only by default) |
-| Schema required | no | no | optional |
-| Norway problem | impossible | present | impossible |
-| `!!python/object` | rejected | allowed | rejected |
-| Duplicate key detection | hard error | silent overwrite | hard error |
-| Runtime dependencies | **zero** | yes | yes (ruamel) |
-| From-scratch parser | yes | no | no |
-| Spec size | sticky note | 211 grammar productions | medium |
-
 ---
 
 ## Get going
@@ -257,7 +230,7 @@ All four must pass clean before any change is considered done.
 Contributions are welcome. A few ground rules:
 
 - **No runtime dependencies.** The whole value proposition is zero deps.
-  Don't add `ruamel`, `pyyaml`, or anything else.
+  Don't add any third-party libraries.
 - **No `Any`.** The codebase is fully typed. Keep it that way.
 - **Tests for everything.** New behaviour gets a test. Bug fixes get a
   regression test. Use `ok()`, `ok_eq()`, and `fail()` from `conftest.py`.
