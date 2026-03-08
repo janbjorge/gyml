@@ -4,32 +4,32 @@
 
 ---
 
-## The YAML problem, or: how I learned to stop trusting my config files
+## The problem
 
-Picture this. You're three coffees deep, 11pm, production is on fire. You trace
-the bug to a config file. The value is `NO`. Harmless, right? Just a string.
-Except PyYAML read it as `False`. Because Norway. Because `NO` is the ISO
-country code for Norway and some YAML 1.1 genius decided that `NO` should
-coerce to a boolean. Your country abbreviation just took down prod.
+Picture this. You are three coffees deep, 11pm, production is on fire. You trace
+the bug to a config file. The value is `NO`. Just a string, right? Except PyYAML
+read it as `False`. Because `NO` is the ISO country code for Norway and some YAML
+1.1 designer decided it should coerce to a boolean. Your country abbreviation just
+took down prod.
 
-This is not a made-up edge case. This is a real incident that has happened
-to real engineers, at real companies, with real on-call rotations.
+This is not a contrived edge case. It has happened to real engineers at real
+companies with real on-call rotations.
 
-YAML's spec is 80+ pages. It has **nine block scalar styles**. It has twelve
-ways to write null (`null`, `Null`, `NULL`, `~`, and eight more you don't want
-to know about). It has anchors that let you embed logic inside a *data file*.
-It has tags that let you instantiate arbitrary Python objects from a config —
-`!!python/object/apply:os.system` is valid PyYAML. Let that sink in.
+The YAML spec contains 211 grammar productions spread across ten chapters. It has
+five scalar styles. It has five ways to write null (`null`, `Null`, `NULL`, `~`,
+and the empty node). It has anchors that let you embed logic inside a data file.
+It has tags that let you instantiate arbitrary Python objects from a config:
+`!!python/object/apply:os.system` is valid PyYAML.
 
-The format was designed to be human-friendly. Instead it became a footgun with
-a hair trigger, a 200-page manual, and a community of people who have all been
-burned by it at least once and now paste `yaml: risky business` into every
-`package.json` they touch.
+The format was designed to be human-friendly. Instead it became a footgun with a
+hair trigger, a thick manual, and a community of people who have all been burned
+by it at least once and now paste `yaml: risky business` into every `package.json`
+they touch.
 
-**GYML is the intervention.** We took YAML's clean block syntax — the
-indented-key-value stuff that actually is nice to write — and paired it with
-JSON's strict, unambiguous semantics. No surprises. No Norway. No 11pm
-incidents from a boolean that used to be a country.
+GYML is the fix. It takes YAML's clean block syntax, the indented key-value style
+that actually is nice to write, and pairs it with JSON's strict, unambiguous
+semantics. No surprises. No Norway. No 11pm incidents from a boolean that used to
+be a country.
 
 ---
 
@@ -38,12 +38,12 @@ incidents from a boolean that used to be a country.
 A strict subset of YAML. Everything valid GYML is also valid YAML.
 The reverse is absolutely not true, which is entirely the point.
 
-The rules are simple enough to fit on a sticky note:
+The rules fit on a sticky note:
 
 - **One way to write each type.** `true`/`false` for booleans. `null` for
   null. Decimal integers and floats. Double-quoted strings. Done.
 - **Block style only.** No flow mappings `{a: 1}`, no flow sequences `[a, b]`.
-  Empty `{}` and `[]` are fine as explicit "this is empty" literals.
+  Empty `{}` and `[]` are fine as explicit empty literals.
 - **No dark arts.** Anchors (`&`), aliases (`*`), and tags (`!!`) are rejected
   at the lexer. Your config file is not a program.
 - **Duplicate keys are a hard error.** Silent overwrites have caused too many
@@ -91,14 +91,14 @@ from gyml import load
 config = load("config.gyml")
 ```
 
-Both functions return plain Python objects — `dict`, `list`, `str`, `int`,
+Both functions return plain Python objects: `dict`, `list`, `str`, `int`,
 `float`, `bool`, or `None`. No wrapper types. No schema required. What you see
 is what you get.
 
 ### Error handling
 
 Errors are precise. When something is wrong you get the exact line, column, and
-a message that tells you how to fix it — not a stack trace pointing at a C
+a message that tells you how to fix it, not a stack trace pointing at a C
 extension.
 
 ```python
@@ -108,7 +108,7 @@ try:
     loads("port: 0xFF")
 except ParseError as e:
     print(e)
-    # line 1, col 7: "0xFF" — hex/octal/binary literals are not allowed
+    # line 1, col 7: "0xFF" -- hex/octal/binary literals are not allowed
 ```
 
 `ParseError` exposes three attributes:
@@ -121,7 +121,7 @@ except ParseError as e:
 
 ### CLI
 
-Convert any `.gyml` file to pretty-printed JSON and pipe it wherever you want:
+Convert any `.gyml` file to pretty-printed JSON:
 
 ```bash
 gyml config.gyml                  # pretty-print to stdout
@@ -223,7 +223,7 @@ someone's production system.
 | Duplicate key detection | hard error | silent overwrite | hard error |
 | Runtime dependencies | **zero** | yes | yes (ruamel) |
 | From-scratch parser | yes | no | no |
-| Spec size | sticky note | 80 pages | medium |
+| Spec size | sticky note | 211 grammar productions | medium |
 
 ---
 
@@ -267,6 +267,6 @@ Contributions are welcome. A few ground rules:
   `uv run ty check gyml/` before opening a PR. CI will reject anything that
   isn't.
 
-Open an issue first if you're planning something bigger than a bug fix — it's
+Open an issue first if you're planning something bigger than a bug fix. It's
 worth a quick conversation before spending time on an approach that might not
 fit the design.
