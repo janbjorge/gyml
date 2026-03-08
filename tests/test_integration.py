@@ -13,8 +13,7 @@ import math
 
 from gyml import loads
 
-from .conftest import fail, ok, ok_eq
-
+from .conftest import fail, ok_eq
 
 # ===========================================================================
 # Realistic configuration documents

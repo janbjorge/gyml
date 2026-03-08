@@ -23,7 +23,6 @@ from typing import Final
 from gyml.errors import ParseError
 from gyml.tokens import ScalarStyle, Token, TokenType
 
-
 # ---------------------------------------------------------------------------
 # Compiled regular expressions used by the validator
 # ---------------------------------------------------------------------------

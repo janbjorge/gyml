@@ -7,8 +7,7 @@ syntax, mixed value types, and the invalid forms GYAML forbids.
 
 from __future__ import annotations
 
-from .conftest import fail, ok, ok_eq
-
+from .conftest import fail, ok_eq
 
 # ===========================================================================
 # Valid mappings

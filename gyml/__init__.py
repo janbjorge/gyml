@@ -56,10 +56,10 @@ def load(path: str | Path) -> GValue:
 
 
 __all__ = [
-    "loads",
-    "load",
-    "ParseError",
     "GValue",
+    "ParseError",
+    "load",
+    "loads",
 ]
 
 

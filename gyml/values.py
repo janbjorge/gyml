@@ -23,7 +23,6 @@ from typing import Union
 
 from gyml.tokens import ScalarStyle, Token
 
-
 # The complete set of value types a GYML document can contain.
 # Using a recursive Union instead of a TypeAlias makes the intent explicit.
 GValue = Union[

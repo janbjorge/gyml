@@ -44,7 +44,6 @@ from gyml.errors import ParseError
 from gyml.tokens import ScalarStyle, Token, TokenType
 from gyml.values import GValue, coerce_scalar
 
-
 # ---------------------------------------------------------------------------
 # Key-validation helpers
 # ---------------------------------------------------------------------------

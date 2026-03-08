@@ -35,8 +35,8 @@ Repository = "https://github.com/janbjorge/gyml"
 # uv
 # ---------------------------------------------------------------------------
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pytest>=8.0",
   "ruff>=0.4",
   "ty>=0.0.1",
@@ -73,8 +73,13 @@ select = [
   "RUF", # Ruff-native rules
 ]
 ignore = [
-  "ANN101", # missing type for `self`
-  "ANN102", # missing type for `cls`
+  "ANN201", # return type on test methods is always None — noise
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "ANN",   # test functions don't need full annotation coverage
+  "TC001", # TYPE_CHECKING guards aren't needed in test helpers
 ]
 
 [tool.ruff.lint.isort]
