@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from gyaml import ParseError, loads
-from gyaml.values import GValue
+from gyml import ParseError, loads
+from gyml.values import GValue
 
 
 def ok(src: str) -> GValue:

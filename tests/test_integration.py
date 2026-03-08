@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import math
 
-from gyaml import loads
+from gyml import loads
 
 from .conftest import fail, ok, ok_eq
 

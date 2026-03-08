@@ -1,5 +1,5 @@
 """
-GYAML Parser — recursive descent over a flat Token list.
+GYML Parser — recursive descent over a flat Token list.
 
 The parser consumes the token stream produced by the Lexer and builds a
 plain Python value tree (GValue).  It knows nothing about source text,
@@ -40,9 +40,9 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from gyaml.errors import ParseError
-from gyaml.tokens import ScalarStyle, Token, TokenType
-from gyaml.values import GValue, coerce_scalar
+from gyml.errors import ParseError
+from gyml.tokens import ScalarStyle, Token, TokenType
+from gyml.values import GValue, coerce_scalar
 
 
 # ---------------------------------------------------------------------------
@@ -386,7 +386,7 @@ class Parser:
             self._expect(TokenType.NEWLINE)
             return value
 
-        # Compact mapping ("- key: val") is forbidden in GYAML.
+        # Compact mapping ("- key: val") is forbidden in GYML.
         if lookahead.type == TokenType.SCALAR and self._peek(1).type == TokenType.COLON:
             raise ParseError(
                 "Compact mapping in sequence item is not allowed;"

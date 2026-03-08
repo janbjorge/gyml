@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 
-from gyaml import loads
+from gyml import loads
 
 from .conftest import fail, ok_eq
 

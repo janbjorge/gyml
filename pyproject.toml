@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "gyaml"
+name = "gyml"
 version = "0.1.0"
 description = "JSON semantics, YAML block syntax — a strict, unambiguous YAML subset"
 readme = "README.md"
@@ -22,14 +22,14 @@ classifiers = [
   "Topic :: Text Processing :: Markup",
   "Typing :: Typed",
 ]
-# Zero runtime dependencies — the whole point of GYAML.
+# Zero runtime dependencies — the whole point of GYML.
 dependencies = []
 
 [project.scripts]
-gyaml = "gyaml:_cli"
+gyml = "gyml:_cli"
 
 [project.urls]
-Repository = "https://github.com/janbjorge/gyaml"
+Repository = "https://github.com/janbjorge/gyml"
 
 # ---------------------------------------------------------------------------
 # uv
@@ -78,7 +78,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["gyaml"]
+known-first-party = ["gyml"]
 
 # ---------------------------------------------------------------------------
 # ty

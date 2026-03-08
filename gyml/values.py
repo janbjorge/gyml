@@ -1,7 +1,7 @@
 """
-GYAML value types and scalar coercion.
+GYML value types and scalar coercion.
 
-GValue is the closed set of Python types that a parsed GYAML document can
+GValue is the closed set of Python types that a parsed GYML document can
 produce — identical to what JSON can express:
 
     null   → None
@@ -21,10 +21,10 @@ from __future__ import annotations
 import re
 from typing import Union
 
-from gyaml.tokens import ScalarStyle, Token
+from gyml.tokens import ScalarStyle, Token
 
 
-# The complete set of value types a GYAML document can contain.
+# The complete set of value types a GYML document can contain.
 # Using a recursive Union instead of a TypeAlias makes the intent explicit.
 GValue = Union[
     None,

@@ -1,4 +1,4 @@
-# gyaml
+# gyml
 
 YAML syntax, JSON semantics. No surprises.
 
@@ -11,7 +11,7 @@ can produce different values. The Norway Problem (`NO` → `False`), implicit
 type coercion, twelve ways to write null, anchors that turn config files into
 programs — none of this belongs in a configuration format.
 
-GYAML fixes this by keeping only the parts of YAML that are unambiguous:
+GYML fixes this by keeping only the parts of YAML that are unambiguous:
 
 - **Block style only** — no flow mappings `{a: 1}` or flow sequences `[a, b]`
   (empty `{}` and `[]` are allowed as explicit empty-collection literals)
@@ -22,16 +22,16 @@ GYAML fixes this by keeping only the parts of YAML that are unambiguous:
 - **Duplicate keys are a hard error**
 - **Indentation is strict** — multiples of 2 spaces, tabs rejected
 
-Valid GYAML is always valid YAML. The reverse is not true, which is the point.
+Valid GYML is always valid YAML. The reverse is not true, which is the point.
 
 ---
 
 ## Install
 
 ```bash
-pip install gyaml
+pip install gyml
 # or
-uv add gyaml
+uv add gyml
 ```
 
 ---
@@ -41,7 +41,7 @@ uv add gyaml
 ### Python API
 
 ```python
-from gyaml import loads, load
+from gyml import loads, load
 
 # Parse a string
 config = loads("""
@@ -53,7 +53,7 @@ database:
 # → {"database": {"host": "localhost", "port": 5432, "ssl": True}}
 
 # Parse a file
-config = load("config.gyaml")
+config = load("config.gyml")
 ```
 
 Two functions, that's it. Both return plain Python objects — `dict`, `list`,
@@ -62,7 +62,7 @@ Two functions, that's it. Both return plain Python objects — `dict`, `list`,
 ### Error handling
 
 ```python
-from gyaml import loads, ParseError
+from gyml import loads, ParseError
 
 try:
     loads("port: 0xFF")
@@ -76,12 +76,12 @@ point the user directly at the offending character.
 ### CLI
 
 ```bash
-gyaml config.gyaml          # pretty-print as JSON to stdout
+gyml config.gyml            # pretty-print as JSON to stdout
 ```
 
 ---
 
-## What valid GYAML looks like
+## What valid GYML looks like
 
 ```yaml
 # Scalars
@@ -121,7 +121,7 @@ tags: []
 
 ---
 
-## What GYAML rejects (and why)
+## What GYML rejects (and why)
 
 | Input | Error | Reason |
 |---|---|---|
@@ -139,7 +139,7 @@ tags: []
 
 ## Compared to alternatives
 
-| | GYAML | PyYAML | StrictYAML |
+| | GYML | PyYAML | StrictYAML |
 |---|---|---|---|
 | Auto-typed scalars | yes | yes (dangerously) | no (strings by default) |
 | Schema required | no | no | optional |

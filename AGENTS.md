@@ -7,11 +7,11 @@ Follow every rule here precisely; do not invent conventions not listed.
 
 ## Project overview
 
-GYAML is a strict YAML subset with JSON semantics — zero external runtime
+GYML is a strict YAML subset with JSON semantics — zero external runtime
 dependencies, from-scratch parser, fully typed (no `Any`).
 
 ```
-gyaml/
+gyml/
   __init__.py   # public API: loads(), load(), _cli()
   errors.py     # ParseError dataclass
   tokens.py     # TokenType, ScalarStyle, Token
@@ -70,13 +70,13 @@ uv run pytest -v
 
 ```bash
 # Lint + auto-fix
-uv run ruff check --fix gyaml/ tests/
+uv run ruff check --fix gyml/ tests/
 
 # Format
-uv run ruff format gyaml/ tests/
+uv run ruff format gyml/ tests/
 
 # Type-check (ty, not pyright)
-ty check gyaml/
+ty check gyml/
 ```
 
 All three must pass clean before any change is considered done.
@@ -96,7 +96,7 @@ All three must pass clean before any change is considered done.
 Order (enforced by ruff/isort):
 1. `__future__`
 2. stdlib
-3. first-party (`gyaml.*`)
+3. first-party (`gyml.*`)
 
 No third-party runtime imports — the package has zero runtime dependencies.
 Test files may import `pytest`; conftest helpers are available via relative

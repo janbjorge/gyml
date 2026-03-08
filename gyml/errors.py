@@ -1,5 +1,5 @@
 """
-Errors raised by the GYAML parser.
+Errors raised by the GYML parser.
 
 A single exception type carries everything a caller needs to produce a
 helpful diagnostic: the human-readable message plus the exact source

@@ -1,5 +1,5 @@
 """
-GYAML Lexer — converts a raw source string into a flat list of Tokens.
+GYML Lexer — converts a raw source string into a flat list of Tokens.
 
 Responsibilities
 ----------------
@@ -20,8 +20,8 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from gyaml.errors import ParseError
-from gyaml.tokens import ScalarStyle, Token, TokenType
+from gyml.errors import ParseError
+from gyml.tokens import ScalarStyle, Token, TokenType
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ _LOOSE_NULLS: Final[frozenset[str]] = frozenset({"~", "Null", "NULL"})
 
 class Lexer:
     """
-    Converts a GYAML source string into a flat list of Tokens.
+    Converts a GYML source string into a flat list of Tokens.
 
     Usage::
 
@@ -226,13 +226,13 @@ class Lexer:
             )
 
         if ch == "&":
-            raise ParseError("Anchors (&) are not allowed in GYAML", line_no, col)
+            raise ParseError("Anchors (&) are not allowed in GYML", line_no, col)
 
         if ch == "*":
-            raise ParseError("Aliases (*) are not allowed in GYAML", line_no, col)
+            raise ParseError("Aliases (*) are not allowed in GYML", line_no, col)
 
         if ch == "!" and pos + 1 < len(line) and line[pos + 1] == "!":
-            raise ParseError("Tags (!!) are not allowed in GYAML", line_no, col)
+            raise ParseError("Tags (!!) are not allowed in GYML", line_no, col)
 
         value, length = self._read_plain(line, pos)
         if value:
@@ -356,7 +356,7 @@ class Lexer:
 
     def _validate_plain(self, value: str, line_no: int, col: int) -> None:
         """
-        Reject plain scalars that look like YAML-extended forms GYAML bans.
+        Reject plain scalars that look like YAML-extended forms GYML bans.
 
         Checks are ordered from most specific (special floats) to less
         specific (underscore separators) so the first match produces the

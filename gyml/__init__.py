@@ -1,10 +1,10 @@
 """
-GYAML — JSON semantics, YAML block syntax.
+GYML — JSON semantics, YAML block syntax.
 
 Public API
 ----------
-loads(text)   Parse a GYAML string and return a Python value.
-load(path)    Parse a GYAML file and return a Python value.
+loads(text)   Parse a GYML string and return a Python value.
+load(path)    Parse a GYML file and return a Python value.
 
 ParseError    Raised on the first syntax or semantic violation.
 GValue        The set of Python types a parsed document can contain.
@@ -22,15 +22,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gyaml.errors import ParseError
-from gyaml.lexer import Lexer
-from gyaml.parser import Parser
-from gyaml.values import GValue
+from gyml.errors import ParseError
+from gyml.lexer import Lexer
+from gyml.parser import Parser
+from gyml.values import GValue
 
 
 def loads(text: str) -> GValue:
     """
-    Parse a GYAML document from the string *text*.
+    Parse a GYML document from the string *text*.
 
     Raises
     ------
@@ -43,7 +43,7 @@ def loads(text: str) -> GValue:
 
 def load(path: str | Path) -> GValue:
     """
-    Parse a GYAML document from the file at *path*.
+    Parse a GYML document from the file at *path*.
 
     Raises
     ------
@@ -64,22 +64,22 @@ __all__ = [
 
 
 # ---------------------------------------------------------------------------
-# CLI entry point — registered as `gyaml` console script in pyproject.toml
-# and also runnable as `python -m gyaml <file.gyaml>`.
+# CLI entry point — registered as `gyml` console script in pyproject.toml
+# and also runnable as `python -m gyml <file.gyml>`.
 # ---------------------------------------------------------------------------
 
 
 def _cli() -> None:
     """
-    Convert a GYAML file to pretty-printed JSON and write it to stdout.
+    Convert a GYML file to pretty-printed JSON and write it to stdout.
 
-    Usage: gyaml <file.gyaml>
+    Usage: gyml <file.gyml>
     """
     import json
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: gyaml <file.gyaml>", file=sys.stderr)
+        print("Usage: gyml <file.gyml>", file=sys.stderr)
         sys.exit(1)
 
     try:
