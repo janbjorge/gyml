@@ -1,5 +1,5 @@
 """
-GYML value types and scalar coercion.
+GYML value types, shared constants, and scalar coercion.
 
 GValue is the closed set of Python types that a parsed GYML document can
 produce — identical to what JSON can express:
@@ -14,35 +14,76 @@ produce — identical to what JSON can express:
 coerce_scalar() converts a plain Token to the most specific GValue type,
 following JSON semantics: quoted scalars are always strings; plain scalars
 are matched against null, booleans, integers, and floats in that order.
+
+This module also hosts the canonical boolean/null spelling sets and
+number-validation regexes so that the lexer and parser can import them
+instead of each maintaining their own copies.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Union
+from typing import Final
 
 from gyml.tokens import ScalarStyle, Token
 
 # The complete set of value types a GYML document can contain.
-# Using a recursive Union instead of a TypeAlias makes the intent explicit.
-GValue = Union[
-    None,
-    bool,
-    int,
-    float,
-    str,
-    "list[GValue]",
-    "dict[str, GValue]",
-]
+GValue = None | bool | int | float | str | list["GValue"] | dict[str, "GValue"]
 
 
-# ---------------------------------------------------------------------------
-# Patterns — used only for coercion, not validation (validation is in lexer.py)
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
+# Canonical boolean / null spelling sets
+# ------------------------------------------------------------------
 
-_RE_VALID_INT: re.Pattern[str] = re.compile(r"^-?(0|[1-9]\d*)$")
-_RE_VALID_FLOAT: re.Pattern[str] = re.compile(r"^-?(0|[1-9]\d*)\.\d+([eE][+\-]?\d+)?$")
-_RE_VALID_SCI: re.Pattern[str] = re.compile(r"^-?(0|[1-9]\d*)[eE][+\-]?\d+$")
+# The only boolean spellings GYML accepts as values.
+VALID_BOOLS: Final[frozenset[str]] = frozenset({"true", "false"})
+
+# YAML-legacy boolean spellings that GYML explicitly forbids as values.
+LOOSE_BOOLS: Final[frozenset[str]] = frozenset(
+    {
+        "yes",
+        "no",
+        "on",
+        "off",
+        "Yes",
+        "No",
+        "On",
+        "Off",
+        "YES",
+        "NO",
+        "ON",
+        "OFF",
+        "True",
+        "False",
+        "TRUE",
+        "FALSE",
+    }
+)
+
+# Every boolean-like spelling — used by the parser to reject bare keys.
+ALL_BOOL_SPELLINGS: Final[frozenset[str]] = VALID_BOOLS | LOOSE_BOOLS
+
+# YAML-legacy null spellings that GYML explicitly forbids as values.
+LOOSE_NULLS: Final[frozenset[str]] = frozenset({"~", "Null", "NULL"})
+
+# Every null-like spelling — used by the parser to reject bare keys.
+ALL_NULL_SPELLINGS: Final[frozenset[str]] = LOOSE_NULLS | frozenset({"null"})
+
+
+# ------------------------------------------------------------------
+# Number-validation patterns (shared by lexer and coercion)
+# ------------------------------------------------------------------
+
+RE_VALID_INT: Final[re.Pattern[str]] = re.compile(r"^-?(0|[1-9]\d*)$")
+RE_VALID_FLOAT: Final[re.Pattern[str]] = re.compile(
+    r"^-?(0|[1-9]\d*)\.\d+([eE][+\-]?\d+)?$"
+)
+RE_VALID_SCI: Final[re.Pattern[str]] = re.compile(r"^-?(0|[1-9]\d*)[eE][+\-]?\d+$")
+
+
+# ------------------------------------------------------------------
+# Scalar coercion
+# ------------------------------------------------------------------
 
 
 def coerce_scalar(token: Token) -> GValue:
@@ -57,9 +98,8 @@ def coerce_scalar(token: Token) -> GValue:
       2. "true"  → True
       3. "false" → False
       4. integer pattern → int
-      5. decimal float pattern → float
-      6. scientific notation pattern → float
-      7. anything else → str
+      5. float / scientific notation pattern → float
+      6. anything else → str
     """
     if token.style == ScalarStyle.QUOTED:
         return token.value
@@ -72,11 +112,9 @@ def coerce_scalar(token: Token) -> GValue:
         return True
     if text == "false":
         return False
-    if _RE_VALID_INT.match(text):
+    if RE_VALID_INT.match(text):
         return int(text)
-    if _RE_VALID_FLOAT.match(text):
-        return float(text)
-    if _RE_VALID_SCI.match(text):
+    if RE_VALID_FLOAT.match(text) or RE_VALID_SCI.match(text):
         return float(text)
 
     return text

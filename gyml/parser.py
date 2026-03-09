@@ -42,48 +42,18 @@ from typing import Final
 
 from gyml.errors import ParseError
 from gyml.tokens import ScalarStyle, Token, TokenType
-from gyml.values import GValue, coerce_scalar
+from gyml.values import (
+    ALL_BOOL_SPELLINGS,
+    ALL_NULL_SPELLINGS,
+    GValue,
+    coerce_scalar,
+)
 
 # ---------------------------------------------------------------------------
 # Key-validation helpers
 # ---------------------------------------------------------------------------
 
-# A plain key that matches a full JSON number shape is forbidden.
 _RE_BARE_NUMBER: Final = re.compile(r"^-?(0|[1-9]\d*)(\.\d+)?([eE][+\-]?\d+)?$")
-
-# All boolean-like spellings (valid and loose) — none are allowed as bare keys.
-_ALL_BOOL_SPELLINGS: Final[frozenset[str]] = frozenset(
-    {
-        "true",
-        "false",
-        "yes",
-        "no",
-        "on",
-        "off",
-        "Yes",
-        "No",
-        "On",
-        "Off",
-        "YES",
-        "NO",
-        "ON",
-        "OFF",
-        "True",
-        "False",
-        "TRUE",
-        "FALSE",
-    }
-)
-
-# All null-like spellings — none are allowed as bare keys.
-_ALL_NULL_SPELLINGS: Final[frozenset[str]] = frozenset(
-    {
-        "null",
-        "~",
-        "Null",
-        "NULL",
-    }
-)
 
 
 # ---------------------------------------------------------------------------
@@ -245,13 +215,13 @@ class Parser:
         if token.style == ScalarStyle.QUOTED:
             return text  # quoted → any content is a valid key
 
-        if text in _ALL_BOOL_SPELLINGS:
+        if text in ALL_BOOL_SPELLINGS:
             raise ParseError(
                 f'"{text}": boolean literals are not allowed as keys',
                 token.line,
                 token.col,
             )
-        if text in _ALL_NULL_SPELLINGS:
+        if text in ALL_NULL_SPELLINGS:
             raise ParseError(
                 f'"{text}": null literals are not allowed as keys',
                 token.line,
@@ -271,8 +241,8 @@ class Parser:
         Parse the value that follows a colon.
 
         Two legal shapes:
-          • Inline:  "key: <scalar|{}|[]> NEWLINE"
-          • Block:   "key:\n  INDENT <mapping|sequence> DEDENT"
+          - Inline:  "key: <scalar|{}|[]> NEWLINE"
+          - Block:   "key:\\n  INDENT <mapping|sequence> DEDENT"
         """
         lookahead = self._peek()
 
@@ -290,8 +260,8 @@ class Parser:
                     lookahead.line,
                     lookahead.col,
                 )
-            self._advance()  # consume NEWLINE
-            self._advance()  # consume INDENT
+            self._expect(TokenType.NEWLINE)
+            self._expect(TokenType.INDENT)
             value = self._parse_block_value()
             self._expect(TokenType.DEDENT)
             return value
@@ -349,10 +319,10 @@ class Parser:
         Parse the value of a single sequence item.
 
         Four legal shapes (after the DASH has been consumed):
-          • Block:        "-\n  INDENT <mapping|sequence> DEDENT"
-          • Empty map:    "- {} NEWLINE"
-          • Empty list:   "- [] NEWLINE"
-          • Scalar:       "- <scalar> NEWLINE"
+          - Block:        "-\\n  INDENT <mapping|sequence> DEDENT"
+          - Empty map:    "- {} NEWLINE"
+          - Empty list:   "- [] NEWLINE"
+          - Scalar:       "- <scalar> NEWLINE"
         """
         lookahead = self._peek()
 
@@ -364,8 +334,8 @@ class Parser:
                     lookahead.line,
                     lookahead.col,
                 )
-            self._advance()  # consume NEWLINE
-            self._advance()  # consume INDENT
+            self._expect(TokenType.NEWLINE)
+            self._expect(TokenType.INDENT)
             value = self._parse_block_value()
             self._expect(TokenType.DEDENT)
             # The last key/value in the block already consumed its NEWLINE;

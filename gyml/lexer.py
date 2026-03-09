@@ -22,15 +22,11 @@ from typing import Final
 
 from gyml.errors import ParseError
 from gyml.tokens import ScalarStyle, Token, TokenType
+from gyml.values import LOOSE_BOOLS, LOOSE_NULLS
 
 # ---------------------------------------------------------------------------
 # Compiled regular expressions used by the validator
 # ---------------------------------------------------------------------------
-
-# Patterns that identify *valid* number shapes.
-_RE_VALID_INT: Final = re.compile(r"^-?(0|[1-9]\d*)$")
-_RE_VALID_FLOAT: Final = re.compile(r"^-?(0|[1-9]\d*)\.\d+([eE][+\-]?\d+)?$")
-_RE_VALID_SCI: Final = re.compile(r"^-?(0|[1-9]\d*)[eE][+\-]?\d+$")
 
 # Patterns that identify *forbidden* number shapes.
 _RE_LEADING_ZERO: Final = re.compile(r"^-?0\d+")
@@ -40,31 +36,20 @@ _RE_BARE_DECIMAL: Final = re.compile(r"^\.\d+$|^\d+\.$")
 _RE_LEADING_PLUS: Final = re.compile(r"^\+")
 _RE_UNDERSCORE: Final = re.compile(r"^-?\d[\d_]*_\d")
 
-# Forbidden boolean-like spellings (everything except "true" and "false").
-_LOOSE_BOOLS: Final[frozenset[str]] = frozenset(
-    {
-        "yes",
-        "no",
-        "on",
-        "off",
-        "Yes",
-        "No",
-        "On",
-        "Off",
-        "YES",
-        "NO",
-        "ON",
-        "OFF",
-        "True",
-        "False",
-        "TRUE",
-        "FALSE",
-    }
-)
-_VALID_BOOLS: Final[frozenset[str]] = frozenset({"true", "false"})
+# ---------------------------------------------------------------------------
+# Escape-sequence lookup table (hoisted out of the hot loop)
+# ---------------------------------------------------------------------------
 
-# Forbidden null-like spellings (everything except "null").
-_LOOSE_NULLS: Final[frozenset[str]] = frozenset({"~", "Null", "NULL"})
+_SIMPLE_ESCAPES: Final[dict[str, str]] = {
+    "n": "\n",
+    "t": "\t",
+    '"': '"',
+    "\\": "\\",
+    "/": "/",
+    "b": "\b",
+    "f": "\f",
+    "r": "\r",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -111,17 +96,14 @@ class Lexer:
 
     def _lex_line(self, raw: str, line_no: int) -> None:
         """Process one source line, emitting tokens for its content."""
-        stripped = raw.strip()
+        content = raw.rstrip("\r\n")
 
         # Skip blank lines and comment-only lines entirely.
+        stripped = content.lstrip()
         if not stripped or stripped.startswith("#"):
             return
 
-        content = raw.rstrip("\r\n")
-
-        self._check_leading_whitespace(content, line_no)
-
-        indent = len(content) - len(content.lstrip(" "))
+        indent = self._check_leading_whitespace(content, line_no)
         self._handle_indent_change(indent, line_no)
 
         pos = indent
@@ -130,21 +112,26 @@ class Lexer:
 
         self._emit(TokenType.NEWLINE, line=line_no)
 
-    def _check_leading_whitespace(self, content: str, line_no: int) -> None:
-        """Reject tabs in leading whitespace and odd indent widths."""
-        # Isolate every character before the first non-whitespace character.
+    def _check_leading_whitespace(self, content: str, line_no: int) -> int:
+        """
+        Reject tabs in leading whitespace and odd indent widths.
+
+        Returns the indent level (number of leading spaces) so that the
+        caller does not need to recompute it.
+        """
         leading = content[: len(content) - len(content.lstrip())]
 
         if "\t" in leading:
             raise ParseError("Tabs are not allowed for indentation", line_no, 1)
 
-        indent = len(content) - len(content.lstrip(" "))
+        indent = len(leading)
         if indent % 2 != 0:
             raise ParseError(
                 f"Indentation must be a multiple of 2 spaces (got {indent})",
                 line_no,
                 1,
             )
+        return indent
 
     def _handle_indent_change(self, indent: int, line_no: int) -> None:
         """Push an INDENT or emit DEDENT(s) when the indent level changes."""
@@ -193,9 +180,11 @@ class Lexer:
 
         if ch == "-" and self._is_followed_by_space_or_end(line, pos):
             self._emit(TokenType.DASH, line=line_no, col=col)
-            # Consume the trailing space when present so the parser never sees it.
-            has_space = pos + 1 < len(line) and line[pos + 1] in (" ", "\t")
-            return pos + 2 if has_space else pos + 1
+            # Consume the trailing space when present so the parser never
+            # sees it.
+            if pos + 1 < len(line) and line[pos + 1] == " ":
+                return pos + 2
+            return pos + 1
 
         if ch == "{":
             self._emit(TokenType.LBRACE, line=line_no, col=col)
@@ -230,8 +219,9 @@ class Lexer:
         if ch == "*":
             raise ParseError("Aliases (*) are not allowed in GYML", line_no, col)
 
-        if ch == "!" and pos + 1 < len(line) and line[pos + 1] == "!":
-            raise ParseError("Tags (!!) are not allowed in GYML", line_no, col)
+        # Ban all YAML tags — both single-bang (!tag) and double-bang (!!tag).
+        if ch == "!":
+            raise ParseError("Tags (!) are not allowed in GYML", line_no, col)
 
         value, length = self._read_plain(line, pos)
         if value:
@@ -243,8 +233,8 @@ class Lexer:
 
     @staticmethod
     def _is_followed_by_space_or_end(line: str, pos: int) -> bool:
-        """Return True when pos+1 is past the end of the line or a space/tab."""
-        return pos + 1 >= len(line) or line[pos + 1] in (" ", "\t")
+        """Return True when pos+1 is past the end of the line or a space."""
+        return pos + 1 >= len(line) or line[pos + 1] == " "
 
     # ------------------------------------------------------------------
     # Scalar readers
@@ -303,19 +293,8 @@ class Lexer:
         """
         esc = line[pos]
 
-        simple: dict[str, str] = {
-            "n": "\n",
-            "t": "\t",
-            '"': '"',
-            "\\": "\\",
-            "/": "/",
-            "b": "\b",
-            "f": "\f",
-            "r": "\r",
-        }
-
-        if esc in simple:
-            chars.append(simple[esc])
+        if esc in _SIMPLE_ESCAPES:
+            chars.append(_SIMPLE_ESCAPES[esc])
             return pos + 1
 
         if esc == "u":
@@ -343,7 +322,7 @@ class Lexer:
             ch = line[pos]
             if ch == "#":
                 break
-            if ch == ":" and (pos + 1 >= len(line) or line[pos + 1] in (" ", "\t")):
+            if ch == ":" and (pos + 1 >= len(line) or line[pos + 1] == " "):
                 break
             pos += 1
         value = line[start:pos].rstrip()
@@ -361,13 +340,13 @@ class Lexer:
         specific (underscore separators) so the first match produces the
         most precise error message.
         """
-        if value in _LOOSE_BOOLS:
+        if value in LOOSE_BOOLS:
             raise ParseError(
                 f'"{value}" is not a valid boolean; use true or false',
                 line_no,
                 col,
             )
-        if value in _LOOSE_NULLS:
+        if value in LOOSE_NULLS:
             raise ParseError(
                 f'"{value}" is not a valid null; use null',
                 line_no,
@@ -418,7 +397,7 @@ class Lexer:
         self,
         token_type: TokenType,
         line: int,
-        col: int = 0,
+        col: int = 1,
     ) -> None:
         """Append a structural (non-scalar) token to the output list."""
         self._tokens.append(Token(token_type, "", None, line, col))
